@@ -1,6 +1,6 @@
 name: image_downloader
 description: Flutter plugin that downloads images on the Internet and saves them on device.
-version: 0.31.2
+version: 0.31.3
 homepage: https://github.com/michaeloki/flutter_image_downloader
 
 environment:
