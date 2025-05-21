@@ -2,10 +2,10 @@ group 'com.ko2ic.imagedownloader'
 version '1.0-SNAPSHOT'
 
 buildscript {
-    ext.kotlin_version = '1.8.22'
+    ext.kotlin_version = '1.5.31'
     repositories {
         google()
-        jcenter()
+        mavenCentral()
     }
 
     dependencies {
@@ -17,7 +17,7 @@ buildscript {
 rootProject.allprojects {
     repositories {
         google()
-        jcenter()
+        mavenCentral()
     }
 }
 
@@ -25,8 +25,8 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
 android {
-    namespace "com.ko2ic.imagedownloader"
-    compileSdkVersion 29
+    namespace 'com.ko2ic.imagedownloader'
+    compileSdkVersion 33
 
     sourceSets {
         main.java.srcDirs += 'src/main/kotlin'
@@ -38,9 +38,17 @@ android {
     lintOptions {
         disable 'InvalidPackage'
     }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_19
+        targetCompatibility = JavaVersion.VERSION_19
+    }
+    kotlinOptions {
+        jvmTarget = '19'
+    }
+
 }
 
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
-    implementation 'androidx.core:core-ktx:1.6.0'
+    implementation 'androidx.core:core-ktx:1.9.0'
 }

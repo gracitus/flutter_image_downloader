@@ -23,9 +23,8 @@ import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
-import io.flutter.plugin.common.PluginRegistry.Registrar
-import io.flutter.embedding.engine.plugins.activity.ActivityAware;
-import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding;
+import io.flutter.embedding.engine.plugins.activity.ActivityAware
+import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
 
 import java.io.BufferedInputStream
 import java.io.File
@@ -36,26 +35,6 @@ import java.util.*
 
 
 class ImageDownloaderPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
-    companion object {
-        @JvmStatic
-        fun registerWith(registrar: Registrar) {
-            val activity = registrar.activity() ?: return
-            val context = registrar.context() ?: return
-            val applicationContext = context.applicationContext
-            val pluginInstance = ImageDownloaderPlugin()
-            pluginInstance.setup(
-                registrar.messenger(),
-                applicationContext,
-                activity,
-                registrar,
-                null
-            )
-        }
-
-        private const val CHANNEL = "plugins.ko2ic.com/image_downloader"
-        private const val LOGGER_TAG = "image_downloader"
-    }
-
     private lateinit var channel: MethodChannel
     private lateinit var permissionListener: ImageDownloaderPermissionListener
     private lateinit var pluginBinding: FlutterPlugin.FlutterPluginBinding
@@ -63,8 +42,16 @@ class ImageDownloaderPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
     private var activityBinding: ActivityPluginBinding? = null
     private var applicationContext: Context? = null
 
+    companion object {
+        private const val CHANNEL = "plugins.ko2ic.com/image_downloader"
+        private const val LOGGER_TAG = "image_downloader"
+    }
+
     override fun onAttachedToEngine(binding: FlutterPlugin.FlutterPluginBinding) {
         pluginBinding = binding
+        channel = MethodChannel(binding.binaryMessenger, CHANNEL)
+        channel.setMethodCallHandler(this)
+        applicationContext = binding.applicationContext
     }
 
     override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
@@ -72,17 +59,14 @@ class ImageDownloaderPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
     }
 
     override fun onAttachedToActivity(activityPluginBinding: ActivityPluginBinding) {
-        setup(
-            pluginBinding.binaryMessenger,
-            pluginBinding.applicationContext,
-            activityPluginBinding.activity,
-            null,
-            activityPluginBinding
-        )
+        permissionListener = ImageDownloaderPermissionListener(activityPluginBinding.activity)
+        activityBinding = activityPluginBinding
+        activityBinding?.addRequestPermissionsResultListener(permissionListener)
     }
 
     override fun onDetachedFromActivity() {
-        tearDown()
+        activityBinding?.removeRequestPermissionsResultListener(permissionListener)
+        activityBinding = null
     }
 
     override fun onDetachedFromActivityForConfigChanges() {
@@ -91,28 +75,6 @@ class ImageDownloaderPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
 
     override fun onReattachedToActivityForConfigChanges(binding: ActivityPluginBinding) {
         onAttachedToActivity(binding)
-    }
-
-    private fun setup(
-        messenger: BinaryMessenger,
-        applicationContext: Context,
-        activity: Activity,
-        registrar: Registrar?,
-        activityBinding: ActivityPluginBinding?
-    ) {
-        this.applicationContext = applicationContext
-        channel = MethodChannel(messenger, CHANNEL)
-        channel.setMethodCallHandler(this)
-        permissionListener = ImageDownloaderPermissionListener(activity)
-
-        if (registrar != null) {
-            // V1 embedding setup for activity listeners.
-            registrar.addRequestPermissionsResultListener(permissionListener)
-        } else {
-            // V2 embedding setup for activity listeners.
-            this.activityBinding = activityBinding
-            this.activityBinding?.addRequestPermissionsResultListener(permissionListener)
-        }
     }
 
     private fun tearDown() {
